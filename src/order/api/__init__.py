@@ -29,33 +29,6 @@ def create_app(configuracion={}):
 
     with app.app_context():
         db.create_all()
-        from order.dominio.entidades import Orden
-        from order.dominio.objetos_valor import Direccion
-        from order.dominio.objetos_valor import EstadoOrden
-        from order.dominio.repositorios import RepositorioOrdenes
-        from order.infraestructura.fabricas import FabricaRepositorio
-        orden = Orden(destino=Direccion("direccion string"), estado=EstadoOrden.ENPROCESO)
-        orden.estado = EstadoOrden.ENPROCESO
-        orden.productos = []
-        fabrica_repositorio: FabricaRepositorio = FabricaRepositorio()
-
-        repositorio = fabrica_repositorio.crear_objeto(RepositorioOrdenes)
-
-        producto = Producto()
-        producto.cantidad = 50
-        producto.referencia = uuid.uuid4()
-
-        orden.productos.append(producto)
-
-
-        repositorio.agregar(orden)
-
-
-        order = repositorio.obtener_por_id(14)
-        print(vars(order))
-        orders = repositorio.obtener_todos()
-        print(len(orders))
-
 
         if not app.config.get('TESTING'):
             #comenzar_consumidor(app)
