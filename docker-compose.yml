@@ -1,0 +1,34 @@
+version: '3'
+services:
+# MySQL8
+  db:
+    image: mysql:8
+    hostname: mysqldb
+    container_name: mysqldb
+    profiles: ["eda", "db"]
+    cap_add:
+      - SYS_NICE
+    restart: always
+    environment:
+      - MYSQL_DATABASE=reservas
+      - MYSQL_ROOT_PASSWORD=adminadmin
+    ports:
+      - '3306:3306'
+    volumes:
+      - ./data/mysql:/var/lib/mysql:rw
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    user: mysql
+
+  # Orders service
+  order:
+    container_name: order
+    hostname: order
+    image: order/flask 
+    profiles: ["eda", "order"]
+    depends_on:
+      - db
+    environment:
+      - ORDERS_ADDRESS=orders
+      - PULSAR_ADDRESS=broker
+    ports:
+      - "5000:5000"
