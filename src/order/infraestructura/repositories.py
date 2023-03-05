@@ -5,7 +5,7 @@ from order.dominio.entidades import Orden, Producto
 from order.dominio.fabricas import FabricaOrden
 from order.dominio.entidades import Orden
 from order.dominio.fabricas import FabricaOrden
-from .dto import Order as OrdenDTO
+from .dto import Order as OrdenDTO, Product
 from .mapeadores import MapeadorOrden
 from uuid import UUID
 from pulsar.schema import *
@@ -19,13 +19,13 @@ class RepositorioOrdenesSQLAlchemy(RepositorioOrdenes):
     def fabrica_ordenes(self):
         return self._fabrica_ordenes
 
-    def obtener_por_id(self, id: UUID) -> Orden:
+    def obtener_por_id(self, id: Integer) -> Orden:
         orden_dto = db.session.query(OrdenDTO).filter_by(id=str(id)).one()
         return self.fabrica_ordenes.crear_objeto(orden_dto, MapeadorOrden())
 
     def obtener_todos(self) -> list[Orden]:
-        # TODO
-        raise NotImplementedError
+        ordenes_dto = db.session.query(OrdenDTO).all()
+        return [self.fabrica_ordenes.crear_objeto(orden_dto, MapeadorOrden()) for orden_dto in ordenes_dto]
 
     def agregar(self, orden: Orden):
         orden_dto = self.fabrica_ordenes.crear_objeto(orden, MapeadorOrden())

@@ -1,6 +1,9 @@
 import os
+import uuid
 
 from flask import Flask, render_template, request, url_for, redirect, jsonify, session
+
+from order.dominio.entidades import Producto
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -25,7 +28,6 @@ def create_app(configuracion={}):
     import order.infraestructura.dto
 
     with app.app_context():
-        print(db)
         db.create_all()
         from order.dominio.entidades import Orden
         from order.dominio.objetos_valor import Direccion
@@ -38,7 +40,21 @@ def create_app(configuracion={}):
         fabrica_repositorio: FabricaRepositorio = FabricaRepositorio()
 
         repositorio = fabrica_repositorio.crear_objeto(RepositorioOrdenes)
+
+        producto = Producto()
+        producto.cantidad = 50
+        producto.referencia = uuid.uuid4()
+
+        orden.productos.append(producto)
+
+
         repositorio.agregar(orden)
+
+
+        order = repositorio.obtener_por_id(14)
+        print(vars(order))
+        orders = repositorio.obtener_todos()
+        print(len(orders))
 
 
         if not app.config.get('TESTING'):

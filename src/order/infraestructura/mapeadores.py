@@ -1,4 +1,5 @@
 
+from order.config.db import db
 from order.seedwork.dominio.repositorios import Mapeador
 from order.seedwork.infraestructura.utils import unix_time_millis
 from order.dominio.objetos_valor import EstadoOrden, Direccion
@@ -10,8 +11,6 @@ from .dto import Product as ProductoDTO
 from .excepciones import NoExisteImplementacionParaTipoFabricaExcepcion
 
 class MapeadorOrden(Mapeador):
-    _FORMATO_FECHA = '%Y-%m-%dT%H:%M:%SZ'
-
     def obtener_tipo(self) -> type:
         return Orden.__class__
 
@@ -22,18 +21,22 @@ class MapeadorOrden(Mapeador):
         orden_dto.destiny = entidad.destino.direccion
         orden_dto.state = entidad.estado.value
         
-        #TODO guardar productos
-        orden_dto.products = []
+        productos_dto = []
+        for producto in entidad.productos:
+            producto_dto = ProductoDTO(quantity=producto.cantidad, reference=producto.referencia)
+            productos_dto.append(producto_dto)
+
+        orden_dto.products = productos_dto
 
         return orden_dto
 
     def dto_a_entidad(self, dto: OrdenDTO) -> Orden:
         orden = Orden(destino=dto.destiny, fecha_creacion=dto.creationDate, estado=dto.state)
         orden.productos = list()
+        productos = []
+        for producto_dto in dto.products:
+            producto = Producto(cantidad=producto_dto.quantity, referencia=producto_dto.reference)
+            productos.append(producto)
 
-        productos_dto: list[ProductoDTO] = dto.products
-
-        # TODO: Agregar manejo de productos
-        #orden.productos.extend(self._procesar_itinerario_dto(productos_dto))
-        
+        orden.productos = productos
         return orden
