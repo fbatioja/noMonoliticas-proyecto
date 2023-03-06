@@ -2,10 +2,21 @@ import os
 import uuid
 
 from flask import Flask, render_template, request, url_for, redirect, jsonify, session
-
 from order.dominio.entidades import Producto
 
+#TODO: remove
+from order.seedwork.dominio.excepciones import ExcepcionDominio
+from flask import Response
+from order.aplicacion.mapeadores import MapeadorOrdenDTOJson
+import json
+
+#end TODO
+
 basedir = os.path.abspath(os.path.dirname(__file__))
+
+
+def registrar_handlers():
+    import order.aplicacion
 
 def create_app(configuracion={}):
     # Init la aplicacion de Flask
@@ -27,6 +38,8 @@ def create_app(configuracion={}):
 
     import order.infraestructura.dto
 
+    registrar_handlers()
+    
     with app.app_context():
         db.create_all()
 
@@ -37,5 +50,21 @@ def create_app(configuracion={}):
     @app.route("/health")
     def health():
         return {"status": "up"}
+
+
+    from order.aplicacion.comandos.crear_orden import CrearOrden
+    from order.seedwork.aplicacion.comandos import ejecutar_commando
+    @app.route('/orden-comando', methods=('POST',))
+    def orden_asincrona():
+        
+        orden_dict = request.json
+        map_orden = MapeadorOrdenDTOJson()
+        orden_dto = map_orden.externo_a_dto(orden_dict)
+
+        comando = CrearOrden(orden_dto.state, orden_dto.order_id, orden_dto.destiny, orden_dto.products)
+        ejecutar_commando(comando)
+        
+        return {"orden comando": "ok"}
+        
 
     return app
