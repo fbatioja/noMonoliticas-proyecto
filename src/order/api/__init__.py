@@ -2,16 +2,24 @@ import os
 import uuid
 
 from flask import Flask, render_template, request, url_for, redirect, jsonify, session
-
 from order.dominio.entidades import Producto
 
+#TODO: remover cuando se implemento completo y orden este escuchando el evento
+from order.seedwork.dominio.excepciones import ExcepcionDominio
+from flask import Response
+import json
+#end TODO
+
 basedir = os.path.abspath(os.path.dirname(__file__))
+
+
+def registrar_handlers():
+    import order.aplicacion
 
 def create_app(configuracion={}):
     # Init la aplicacion de Flask
     app = Flask(__name__, instance_relative_config=True)
-    
-    # TODO: Remover o saber que hace esto
+
     app.secret_key = '9d58f98f-3ae8-4149-a09f-3a8c2012e32c'
     app.config['SESSION_TYPE'] = 'filesystem'
     app.config['TESTING'] = configuracion.get('TESTING')
@@ -24,38 +32,13 @@ def create_app(configuracion={}):
     init_db(app)
 
     from order.config.db import db
-
     import order.infraestructura.dto
+    import order.aplicacion
 
+    registrar_handlers()
+    
     with app.app_context():
-        db.create_all()
-        from order.dominio.entidades import Orden
-        from order.dominio.objetos_valor import Direccion
-        from order.dominio.objetos_valor import EstadoOrden
-        from order.dominio.repositorios import RepositorioOrdenes
-        from order.infraestructura.fabricas import FabricaRepositorio
-        orden = Orden(destino=Direccion("direccion string"), estado=EstadoOrden.ENPROCESO)
-        orden.estado = EstadoOrden.ENPROCESO
-        orden.productos = []
-        fabrica_repositorio: FabricaRepositorio = FabricaRepositorio()
-
-        repositorio = fabrica_repositorio.crear_objeto(RepositorioOrdenes)
-
-        producto = Producto()
-        producto.cantidad = 50
-        producto.referencia = uuid.uuid4()
-
-        orden.productos.append(producto)
-
-
-        repositorio.agregar(orden)
-
-
-        order = repositorio.obtener_por_id(14)
-        print(vars(order))
-        orders = repositorio.obtener_todos()
-        print(len(orders))
-
+        db.create_all()       
 
         if not app.config.get('TESTING'):
             #comenzar_consumidor(app)
@@ -64,5 +47,20 @@ def create_app(configuracion={}):
     @app.route("/health")
     def health():
         return {"status": "up"}
+
+
+    from order.aplicacion.comandos.crear_orden import CrearOrden
+    from order.seedwork.aplicacion.comandos import ejecutar_commando
+    from order.aplicacion.mapeadores import MapeadorOrdenDTOJson
+    @app.route('/orden-comando', methods=('POST',))
+    def orden_asincrona():       
+        orden_dict = request.json
+        map_orden = MapeadorOrdenDTOJson()
+        orden_dto = map_orden.externo_a_dto(orden_dict)
+        comando = CrearOrden(orden_dto.state, orden_dto.order_id, orden_dto.destiny, orden_dto.products)
+        ejecutar_commando(comando)
+        
+        return {"orden comando": "ok"}
+        
 
     return app

@@ -1,4 +1,5 @@
 from order.config.db import db
+from order.dominio.eventos import OrdenCreada
 from order.dominio.repositorios import RepositorioOrdenes
 from order.dominio.objetos_valor import Direccion, EstadoOrden
 from order.dominio.entidades import Orden, Producto
@@ -9,6 +10,7 @@ from .dto import Order as OrdenDTO, Product
 from .mapeadores import MapeadorOrden
 from uuid import UUID
 from pulsar.schema import *
+from pydispatch import dispatcher
 
 class RepositorioOrdenesSQLAlchemy(RepositorioOrdenes):
 
@@ -31,6 +33,10 @@ class RepositorioOrdenesSQLAlchemy(RepositorioOrdenes):
         orden_dto = self.fabrica_ordenes.crear_objeto(orden, MapeadorOrden())
         db.session.add(orden_dto)
         db.session.commit()
+        try:
+            self._publicar_eventos_post_commit(orden)
+        except Exception as e:
+            print("Error al publicar el evento: ", e)
 
     def actualizar(self, orden: Orden):
         # TODO
@@ -39,3 +45,6 @@ class RepositorioOrdenesSQLAlchemy(RepositorioOrdenes):
     def eliminar(self, orden_id: UUID):
         # TODO
         raise NotImplementedError
+    
+    def _publicar_eventos_post_commit(self, evento):
+        dispatcher.send(signal=f'{OrdenCreada.__name__}Integracion', evento=evento)
