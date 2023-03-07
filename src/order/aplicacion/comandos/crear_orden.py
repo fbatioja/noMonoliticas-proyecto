@@ -1,3 +1,4 @@
+from order.dominio.entidades import Orden
 from order.seedwork.aplicacion.comandos import Comando
 from order.aplicacion.dto import OrderDTO, ProductDTO
 from .base import CrearOrdenBaseHandler
@@ -20,12 +21,13 @@ class CrearOrdenHandler(CrearOrdenBaseHandler):
 
    
     def handle(self, comando: CrearOrden):
+        
         order_dto = OrderDTO(
                 state = EstadoOrden.ENPROCESO
             ,   order_id=comando.orderId
             ,   destiny=comando.destiny
-            ,   products=[])
-
+            ,   products=comando.products)            
+        
         orden: Orden = self.fabrica_orden.crear_objeto(order_dto, MapeadorOrden())
         orden.crear_orden(orden)
 

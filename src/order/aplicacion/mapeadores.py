@@ -10,14 +10,19 @@ class MapeadorOrdenDTOJson(AppMap):
     def _procesar_orden(self, orden: dict) -> OrderDTO:
         productos_dto: list[ProductDTO] = list()
         return OrderDTO(productos_dto)
+
+    def _procesar_producto(self, producto: dict) -> ProductDTO:
+        productos_dto: list[ProductDTO] = list()
+        return OrderDTO(productos_dto)
     
     def externo_a_dto(self, externo: dict) -> OrderDTO:
-        orden_dto = OrderDTO(destiny=externo.get('destiny'))
+        
         productos: list[ProductDTO] = list()
-
         for item in externo.get('products', list()):
-            orden_dto.products.append(self._procesar_orden(item))
-
+            producto:Producto = Producto(referencia=item.get('productReference'),cantidad=item.get('amount'))
+            productos.append(producto)  
+        
+        orden_dto = OrderDTO(destiny=externo.get('destiny'), products=productos)
         return orden_dto
 
     def dto_a_externo(self, dto: OrderDTO) -> dict:
@@ -41,11 +46,7 @@ class MapeadorOrden(RepMap):
         return Orden.__class__
 
     def dto_a_entidad(self, dto: OrderDTO) -> Orden:
-        orden = Orden(destino=Direccion(dto.destiny), estado=EstadoOrden.ENPROCESO)
-        orden.products = list()
-
-        productos_dto: list[ProductDTO] = dto.products
-        
+        orden = Orden(destino=Direccion(dto.destiny), estado=EstadoOrden.ENPROCESO, productos=dto.products)
         return orden
 
     def entidad_a_dto(self, entidad: Orden) -> OrderDTO:

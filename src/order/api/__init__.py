@@ -4,12 +4,10 @@ import uuid
 from flask import Flask, render_template, request, url_for, redirect, jsonify, session
 from order.dominio.entidades import Producto
 
-#TODO: remove
+#TODO: remover cuando se implemento completo y orden este escuchando el evento
 from order.seedwork.dominio.excepciones import ExcepcionDominio
 from flask import Response
-from order.aplicacion.mapeadores import MapeadorOrdenDTOJson
 import json
-
 #end TODO
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -40,28 +38,7 @@ def create_app(configuracion={}):
     registrar_handlers()
     
     with app.app_context():
-        db.create_all()
-
-        from order.dominio.entidades import Orden
-        from order.dominio.objetos_valor import Direccion
-        from order.dominio.objetos_valor import EstadoOrden
-        from order.dominio.repositorios import RepositorioOrdenes
-        from order.infraestructura.fabricas import FabricaRepositorio
-        orden = Orden(destino=Direccion("direccion string"), estado=EstadoOrden.ENPROCESO)
-        orden.estado = EstadoOrden.ENPROCESO
-        orden.productos = []
-        fabrica_repositorio: FabricaRepositorio = FabricaRepositorio()
-
-        repositorio = fabrica_repositorio.crear_objeto(RepositorioOrdenes)
-
-        producto = Producto()
-        producto.cantidad = 50
-        producto.referencia = uuid.uuid4()
-
-        orden.productos.append(producto)
-        repositorio.agregar(orden)
-
-        orders = repositorio.obtener_todos()
+        db.create_all()       
 
         if not app.config.get('TESTING'):
             #comenzar_consumidor(app)
@@ -74,13 +51,12 @@ def create_app(configuracion={}):
 
     from order.aplicacion.comandos.crear_orden import CrearOrden
     from order.seedwork.aplicacion.comandos import ejecutar_commando
+    from order.aplicacion.mapeadores import MapeadorOrdenDTOJson
     @app.route('/orden-comando', methods=('POST',))
-    def orden_asincrona():
-        
+    def orden_asincrona():       
         orden_dict = request.json
         map_orden = MapeadorOrdenDTOJson()
         orden_dto = map_orden.externo_a_dto(orden_dict)
-
         comando = CrearOrden(orden_dto.state, orden_dto.order_id, orden_dto.destiny, orden_dto.products)
         ejecutar_commando(comando)
         
