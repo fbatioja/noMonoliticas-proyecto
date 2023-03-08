@@ -1,0 +1,74 @@
+{
+	"info": {
+		"_postman_id": "2422e3dc-bc1f-4369-9dd8-2c897f4732b0",
+		"name": "AppsNoMoliticas",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "health",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:5000/health",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "5000",
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "crear_orden_comando",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"orderId\": 1,\n    \"products\": [\n        {\n            \"productReference\": \"producto 1\",\n            \"amount\": 5\n        },\n        {\n            \"productReference\": \"producto 2\",\n            \"amount\": 2\n        }\n    ],\n    \"destiny\": \"cll 45# 73-15\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:5000/orden-comando",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "5000",
+					"path": [
+						"orden-comando"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
