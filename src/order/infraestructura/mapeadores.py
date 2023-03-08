@@ -1,6 +1,6 @@
 
 from order.config.db import db
-from order.dominio.eventos import OrdenCreada
+from order.dominio.eventos import OrdenCreada, OrdenListadoGenerado
 from order.seedwork.dominio.repositorios import Mapeador
 from order.seedwork.infraestructura.utils import unix_time_millis
 from order.dominio.objetos_valor import EstadoOrden, Direccion
@@ -22,6 +22,7 @@ class MapadeadorEventosOrden(Mapeador):
     def __init__(self):
         self.router = {
             Orden: self._entidad_a_orden_creada,
+            OrdenListadoGenerado: self._entidad_a_orden_listado_generado,
         }
 
     def obtener_tipo(self) -> type:
@@ -67,6 +68,17 @@ class MapadeadorEventosOrden(Mapeador):
         if version == 'v1':
             return v1(entidad)
 
+    def _entidad_a_orden_listado_generado(self, entidad: OrdenListadoGenerado, version=LATEST_VERSION):
+        def v1(evento):
+            pass
+
+        if not self.es_version_valida(version):
+            raise Exception(f'No se sabe procesar la version {version}')
+
+        if version == 'v1':
+            return v1(entidad)
+         
+
     def entidad_a_dto(self, entidad: OrdenCreada, version=LATEST_VERSION) -> OrdenDTO:
         if not entidad:
             raise NoExisteImplementacionParaTipoFabricaExcepcion
@@ -93,6 +105,7 @@ class MapeadorOrden(Mapeador):
         
         productos_dto = []
         for producto in entidad.productos:
+            print(vars(producto))
             producto_dto = ProductoDTO(quantity=producto.cantidad, reference=producto.referencia)
             productos_dto.append(producto_dto)
 

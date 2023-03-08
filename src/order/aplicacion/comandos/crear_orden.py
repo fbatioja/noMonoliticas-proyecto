@@ -1,4 +1,5 @@
-from order.dominio.entidades import Orden
+from order.dominio.entidades import Orden, Producto
+from order.infraestructura.schema.v1.comandos import ComandoCrearOrden
 from order.seedwork.aplicacion.comandos import Comando
 from order.aplicacion.dto import OrderDTO, ProductDTO
 from .base import CrearOrdenBaseHandler
@@ -12,19 +13,15 @@ from order.dominio.repositorios import RepositorioOrdenes
 
 @dataclass
 class CrearOrden(Comando):
-    state: str
-    orderId: str
     destiny: str
     products: list[ProductDTO]
 
 class CrearOrdenHandler(CrearOrdenBaseHandler):
 
-   
     def handle(self, comando: CrearOrden):
         
         order_dto = OrderDTO(
                 state = EstadoOrden.ENPROCESO
-            ,   order_id=comando.orderId
             ,   destiny=comando.destiny
             ,   products=comando.products)            
         
@@ -33,15 +30,18 @@ class CrearOrdenHandler(CrearOrdenBaseHandler):
 
         repositorio = self.fabrica_repositorio.crear_objeto(RepositorioOrdenes)
         repositorio.agregar(orden)
-        
-        #UnidadTrabajoPuerto.registrar_batch(repositorio.agregar, reserva)
-        #UnidadTrabajoPuerto.savepoint()
-        #UnidadTrabajoPuerto.commit()
-        
 
-
-@comando.register(CrearOrden)
-def ejecutar_comando_crear_orden(comando: CrearOrden):
+@comando.register(ComandoCrearOrden)
+def ejecutar_comando_crear_orden(comando: ComandoCrearOrden):
     handler = CrearOrdenHandler()
-    handler.handle(comando)
+    productos: list[Producto] = list()
+    for item in comando.data.products:
+        producto:Producto = Producto(referencia=item.productReference,cantidad=item.amount)
+        productos.append(producto)  
+
+    data = CrearOrden(
+        destiny=comando.data.destiny,
+        products=productos
+    )
+    handler.handle(data)
     

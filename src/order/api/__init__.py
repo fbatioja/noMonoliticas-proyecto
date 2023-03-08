@@ -8,6 +8,8 @@ from order.dominio.entidades import Producto
 from order.seedwork.dominio.excepciones import ExcepcionDominio
 from flask import Response
 import json
+import pulsar
+from pulsar.schema import *
 #end TODO
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -15,6 +17,12 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 def registrar_handlers():
     import order.aplicacion
+
+def comenzar_consumidor(app):
+    import threading
+    import order.infraestructura.consumidores as vuelos
+    threading.Thread(target=vuelos.suscribirse_a_comandos, args=[app]).start()
+
 
 def create_app(configuracion={}):
     # Init la aplicacion de Flask
@@ -41,8 +49,7 @@ def create_app(configuracion={}):
         db.create_all()       
 
         if not app.config.get('TESTING'):
-            #comenzar_consumidor(app)
-            pass
+            comenzar_consumidor(app)
 
     @app.route("/health")
     def health():
@@ -54,12 +61,39 @@ def create_app(configuracion={}):
     from order.aplicacion.mapeadores import MapeadorOrdenDTOJson
     @app.route('/orden-comando', methods=('POST',))
     def orden_asincrona():       
-        orden_dict = request.json
-        map_orden = MapeadorOrdenDTOJson()
-        orden_dto = map_orden.externo_a_dto(orden_dict)
-        comando = CrearOrden(orden_dto.state, orden_dto.order_id, orden_dto.destiny, orden_dto.products)
-        ejecutar_commando(comando)
-        
+        print('Entro aca')
+        #orden_dict = request.json
+#        map_orden = MapeadorOrdenDTOJson()
+#        orden_dto = map_orden.externo_a_dto(orden_dict)
+        #comando = CrearOrden(orden_dto.state, orden_dto.order_id, orden_dto.destiny, orden_dto.products)
+
+
+        import pulsar
+        from order.infraestructura.schema.v1.comandos import ComandoCrearOrden, ComandoCrearOrdenPayload, ComandoProductoPayload
+        from order.seedwork.infraestructura import utils
+        from order.seedwork.infraestructura.utils import unix_time_millis
+
+
+        productsPayload = []
+        productoPayload = ComandoProductoPayload(
+                amount=10,
+                productReference='5bfb499c-bd2a-11ed-afa1-0242ac120002'
+            )
+        productsPayload.append(productoPayload)    
+        payload = ComandoCrearOrdenPayload( 
+            destiny='Calle 3 # 9-92', 
+            products=productsPayload, 
+        )
+        comando = ComandoCrearOrden()
+
+        comando.data = payload
+
+        cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+        publicador = cliente.create_producer('comandos-orden', schema=AvroSchema(ComandoCrearOrden))
+        publicador.send(comando)
+
+
+        #ejecutar_commando(comando)
         return {"orden comando": "ok"}
         
 
