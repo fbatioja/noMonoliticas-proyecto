@@ -4,10 +4,10 @@ networks:
     driver: bridge
 
 services:
-# Start zookeeper
+  # Start zookeeper
   zookeeper:
     image: apachepulsar/pulsar:latest
-    profiles: ["pulsar"]
+    profiles: [ "pulsar" ]
     container_name: zookeeper
     restart: on-failure
     networks:
@@ -21,17 +21,17 @@ services:
              bin/generate-zookeeper-config.sh conf/zookeeper.conf && \
              exec bin/pulsar zookeeper"
     healthcheck:
-      test: ["CMD", "bin/pulsar-zookeeper-ruok.sh"]
+      test: [ "CMD", "bin/pulsar-zookeeper-ruok.sh" ]
       interval: 10s
       timeout: 5s
       retries: 30
 
-# Init cluster metadata
+  # Init cluster metadata
   pulsar-init:
     container_name: pulsar-init
     hostname: pulsar-init
     image: apachepulsar/pulsar:latest
-    profiles: ["pulsar"]
+    profiles: [ "pulsar" ]
     networks:
       - pulsar
     command: >
@@ -45,10 +45,10 @@ services:
       zookeeper:
         condition: service_healthy
 
-# Start bookie
+  # Start bookie
   bookie:
     image: apachepulsar/pulsar:latest
-    profiles: ["pulsar"]
+    profiles: [ "pulsar" ]
     container_name: bookie
     restart: on-failure
     networks:
@@ -62,16 +62,15 @@ services:
         condition: service_healthy
       pulsar-init:
         condition: service_completed_successfully
-  # Map the local directory to the container to avoid bookie startup failure due to insufficient container disks.
-    # volumes:
-    #   - ./data/bookkeeper:/pulsar/data/bookkeeper
-    command: bash -c "bin/apply-config-from-env.py conf/bookkeeper.conf
-      && exec bin/pulsar bookie"
+    # Map the local directory to the container to avoid bookie startup failure due to insufficient container disks.
+    volumes:
+      - ./data/bookkeeper:/pulsar/data/bookkeeper
+    command: bash -c "bin/apply-config-from-env.py conf/bookkeeper.conf && exec bin/pulsar bookie"
 
-# Start broker
+  # Start broker
   broker:
     image: apachepulsar/pulsar:latest
-    profiles: ["pulsar"]
+    profiles: [ "pulsar" ]
     container_name: broker
     hostname: broker
     restart: on-failure
@@ -94,17 +93,16 @@ services:
     ports:
       - "6650:6650"
       - "8080:8080"
-    # volumes:
-    #   - ./connectors/pulsar:/pulsar/connectors
-    command: bash -c "bin/apply-config-from-env.py conf/broker.conf
-      &&  exec bin/pulsar broker"
+    volumes:
+      - ./connectors/pulsar:/pulsar/connectors
+    command: bash -c "bin/apply-config-from-env.py conf/broker.conf &&  exec bin/pulsar broker"
 
-# MySQL8
+  # MySQL8
   db:
     image: mysql:8
     hostname: mysqldb
     container_name: mysqldb
-    profiles: ["eda", "db"]
+    profiles: [ "eda", "db" ]
     cap_add:
       - SYS_NICE
     restart: always
@@ -122,8 +120,8 @@ services:
   order:
     container_name: order
     hostname: order
-    image: order/flask 
-    profiles: ["eda", "order"]
+    image: order/flask
+    profiles: [ "eda", "order" ]
     depends_on:
       - db
     environment:
@@ -132,6 +130,40 @@ services:
     ports:
       - "5000:5000"
 
+  # PostgreSQL
+  dbdelivery:
+    container_name: db-delivery
+    profiles: [ "pulsar" ]
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: 987654321
+      POSTGRES_USER: delivery_user
+      POSTGRES_DB: delivery_db
+    ports:
+      - 5432:5432
+
+  # Delivery service
+  delivery:
+    container_name: delivery
+    hostname: delivery
+    build: ./src/delivery
+    depends_on:
+      - dbdelivery
+      - broker
+      - zookeeper
+      - bookie
+      - pulsar-init
+    environment:
+      - DB_USER=delivery_user
+      - DB_PASSWORD=987654321
+      - DB_HOST=localhost
+      - DB_PORT=5432
+      - DB_NAME=delivery_db
+      - PULSAR_HOST=pulsar://localhost:6650
+      - PULSAR_SUBS_TOPIC=outbound-created
+      - DB_PASSWORD=delivery-sub
+      - PULSAR_SUBS_TOPIC=roadmap-created
+      
   # Warehouse service
   warehouse:
     container_name: warehouse
