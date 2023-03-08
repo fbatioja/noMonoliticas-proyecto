@@ -12,8 +12,8 @@ services:
     restart: on-failure
     networks:
       - pulsar
-    volumes:
-      - ./data/zookeeper:/pulsar/data/zookeeper
+    # volumes:
+    #   - ./data/zookeeper:/pulsar/data/zookeeper
     environment:
       - metadataStoreUrl=zk:zookeeper:2181
     command: >
@@ -111,9 +111,9 @@ services:
       - MYSQL_ROOT_PASSWORD=adminadmin
     ports:
       - '3306:3306'
-    volumes:
-      - ./data/mysql:/var/lib/mysql:rw
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    # volumes:
+    #   - ./data/mysql:/var/lib/mysql:rw
+    #   - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     user: mysql
 
   # Orders service
@@ -163,3 +163,17 @@ services:
       - PULSAR_SUBS_TOPIC=outbound-created
       - DB_PASSWORD=delivery-sub
       - PULSAR_SUBS_TOPIC=roadmap-created
+      
+  # Warehouse service
+  warehouse:
+    container_name: warehouse
+    hostname: warehouse
+    image: warehouse/flask 
+    profiles: ["eda", "order"]
+    depends_on:
+      - db
+    environment:
+      - WAREHOUSE_ADDRESS=warehouse
+      - PULSAR_ADDRESS=broker
+    ports:
+      - "5001:5001"

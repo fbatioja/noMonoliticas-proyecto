@@ -1,0 +1,20 @@
+[project]
+name = "EDS"
+version = "1.0.0"
+authors = [
+  { name="Bony Casas", email="b.casas@uniandes.edu.co" },
+  { name="Fabian Batioja", email="f.batioja@uniandes.edu.co" },
+  { name="Andres Rodriguez", email="af.rodriguezm1@uniandes.edu.co" },
+  { name="Santiago Ocampo", email="s.ocampor@uniandes.edu.co" }
+]
+description = "Caso de estudio Entregas De los Alpes"
+readme = "README.md"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]
+pythonpath = [
+  ".", "src",
+]
