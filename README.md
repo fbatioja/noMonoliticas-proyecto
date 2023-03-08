@@ -2,9 +2,9 @@
 
 Este proyecto esta compuesto por 3 microservicios que se comunican usando eventos de dominio. Dentro de la carpeta src encontrara los tres microservicios: 
 
-Orden
-Bodega
-Entrega 
+Order
+Warehouse
+Delivery 
 
 # Pasos para ejecutar aplicaciòn
 1. Ejecutar apache Pulsar
@@ -23,19 +23,28 @@ flask --app src/order/api run
 4. Ejecutar microservicio de Bodega: Desde el directorio principal ejecute el siguiente comando.
 
 ```
-flask --app src/warehouse/api run
+flask --app ./src/warehouse_ms/modules/outbounds/api run --host=0.0.0.0 (editado) 
 ```
 
-5. Ejecutar microservicio de Bodega: Desde el directorio principal ejecute el siguiente comando.
+5. Ejecutar microservicio de Delivery: Desde el directorio principal ejecute el siguiente comando.
+
+## Microservicio de Delivery 
+Definición de variables de entornos: Defina las varibles de entorno ejecutando los siguientes comandos en la terminal o dejando por default los valores para la conección
 
 ```
-flask --app src/warehouse/api run
+export DB_USER=delivery_user
+export DB_PASSWORD=987654321
+export DB_HOST=localhost
+export DB_PORT=5432
+export DB_NAME=delivery_db
+export PULSAR_HOST=pulsar://localhost:6650
+export PULSAR_SUBS_TOPIC=outbound-created
+export DB_PASSWORD=delivery-sub
+export PULSAR_SUBS_TOPIC=roadmap-created
 ```
-
-6. Ejecutar microservicio de Entrega: Desde el directorio principal ejecute el siguiente comando.
-
+Ejecutar microservicio:
 ```
-flask --app src/warehouse/api run
+python src/delivery/delivery_app.py
 ```
 
 # Como ejecutar la prueba
