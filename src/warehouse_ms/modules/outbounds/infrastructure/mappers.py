@@ -145,16 +145,16 @@ class OutboundEventsMapper(Mapper):
                 destination=str(event.destination), 
                 created_date=int(unix_time_millis(event.created_date))
             )
-            evento_integracion = CreatedOrderEvent(id=str(event.id))
-            evento_integracion.id = str(event.id)
-            evento_integracion.time = int(unix_time_millis(event.fecha_creacion))
-            evento_integracion.specversion = str(version)
-            evento_integracion.type = 'OrderCreated'
-            evento_integracion.datacontenttype = 'AVRO'
-            evento_integracion.service_name = 'eds'
-            evento_integracion.data = payload
+            integration_event = CreatedOrderEvent(id=str(event.id))
+            integration_event.id = str(event.id)
+            integration_event.time = int(unix_time_millis(event.fecha_creacion))
+            integration_event.specversion = str(version)
+            integration_event.type = 'OrderCreated'
+            integration_event.datacontenttype = 'AVRO'
+            integration_event.service_name = 'eds'
+            integration_event.data = payload
 
-            return evento_integracion
+            return integration_event
                     
         if not self.is_valid_version(version):
             raise Exception(f'Unknown implementation of version {version}')
@@ -167,8 +167,30 @@ class OutboundEventsMapper(Mapper):
         raise NotImplementedError
     
     def _entity_to_created_outbound(self, entity: OutboundCreated, version=LATEST_VERSION):
-        # TODO
-        raise NotImplementedError
+        def v1(event):
+            from .schema.v1.events import CreatedOutboundPayload, CreatedOutboundEvent
+
+            payload = CreatedOutboundPayload(
+                order_id=str(event.order_id), 
+                warehouses=str(event.warehouses), 
+                destination=str(event.destination.address)
+            )
+            integration_event = CreatedOutboundEvent(id=str(event.id))
+            integration_event.id = str(event.id)
+            integration_event.time = int(unix_time_millis(event.created_date))
+            integration_event.specversion = str(version)
+            integration_event.type = 'OutboundCreated'
+            integration_event.datacontenttype = 'AVRO'
+            integration_event.service_name = 'eds'
+            integration_event.data = payload
+
+            return integration_event
+                    
+        if not self.is_valid_version(version):
+            raise Exception(f'Unknown implementation of version {version}')
+
+        if version == 'v1':
+            return v1(entity)
     
     def _entity_to_canceled_outbound(self, entity: OutboundCanceled, version=LATEST_VERSION):
         # TODO

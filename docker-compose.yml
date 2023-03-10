@@ -63,8 +63,8 @@ services:
       pulsar-init:
         condition: service_completed_successfully
     # Map the local directory to the container to avoid bookie startup failure due to insufficient container disks.
-    volumes:
-      - ./data/bookkeeper:/pulsar/data/bookkeeper
+    # volumes:
+    #   - ./data/bookkeeper:/pulsar/data/bookkeeper
     command: bash -c "bin/apply-config-from-env.py conf/bookkeeper.conf && exec bin/pulsar bookie"
 
   # Start broker
@@ -93,8 +93,8 @@ services:
     ports:
       - "6650:6650"
       - "8080:8080"
-    volumes:
-      - ./connectors/pulsar:/pulsar/connectors
+    # volumes:
+    #   - ./connectors/pulsar:/pulsar/connectors
     command: bash -c "bin/apply-config-from-env.py conf/broker.conf &&  exec bin/pulsar broker"
 
   # MySQL8

@@ -1,8 +1,9 @@
-from schemas import RoadMapSchema
+from schemas import CreatedOutboundEvent
 from delivery_controller import processCreateDelivery
 import psycopg2
 from psycopg2 import Error
-import pulsar
+import pulsar,_pulsar  
+from pulsar.schema import *
 import json
 import os
 
@@ -70,15 +71,13 @@ except (Exception, Error) as error:
     print("Error while connecting to PostgreSQL", error)
 
 client = pulsar.Client(pulsar_host)
-consumer = client.subscribe(
-    pulsar_subs_topic, subscription_name=pulse_subs_name)
+consumer = client.subscribe(pulsar_subs_topic, consumer_type=_pulsar.ConsumerType.Shared, subscription_name=pulse_subs_name, schema=AvroSchema(CreatedOutboundEvent))
 
 while True:
-    msg = consumer.receive()
-    data = json.loads(msg.data().decode('utf-8'))
-    print("Received order...")
+    msg = consumer.receive()    
+    data = msg.value().data
+    print(f'Received event: {data}')
     processCreateDelivery(cursor, connection, data)
-    #processCreateDelivery(cursor, connection, data, schema=AvroSchema(RoadMapSchema))
     print("Order processed...")
     consumer.acknowledge(msg)
 

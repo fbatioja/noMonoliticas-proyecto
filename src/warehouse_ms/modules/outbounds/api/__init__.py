@@ -7,25 +7,6 @@ from flask_swagger import swagger
 # Identifica el directorio base
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-def test_logic(app):
-    from warehouse_ms.modules.outbounds.infrastructure.projections import OrderCreatedProjection
-    from warehouse_ms.modules.outbounds.domain.value_objects import OutboundProduct, Reference, Amount, Location
-    from warehouse_ms.seedwork.infrastructure.projections import execute_projection
-    from datetime import datetime
-    import uuid
-
-    location = Location('calle luna calle sol')
-    reference = Reference('61232a5d-61e3-4550-b190-b8bdd3e6dd0f')
-    amount = Amount(1)
-    product = OutboundProduct(reference, amount)
-
-    order_id = uuid.uuid4()
-    product_order = list()
-    product_order.append(product)
-    destination = location
-    
-    execute_projection(OrderCreatedProjection(order_id, product_order, destination), app=app)
-
 def register_handlers():
     import warehouse_ms.modules.outbounds.application
 
@@ -65,7 +46,6 @@ def create_app(configuracion={}):
     with app.app_context():
         db.create_all()
         if not app.config.get('TESTING'):
-            #test_logic(app)
             start_consumers(app)
 
     @app.route("/spec")

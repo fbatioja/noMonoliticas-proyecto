@@ -26,7 +26,7 @@ class OrderCanceled(OutboundEvent):
 @dataclass
 class OutboundCreated(OutboundEvent):
     order_id: uuid.UUID = None
-    warehouses: vo.WarehouseOrder = None
+    warehouses: list[vo.WarehouseOrder] = None
     destination: vo.Location = None
     created_date: Optional[datetime] = None
 
