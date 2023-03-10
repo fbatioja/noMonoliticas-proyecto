@@ -32,7 +32,7 @@ class CrearOrdenHandler(CrearOrdenBaseHandler):
         repositorio.agregar(orden)
 
 @comando.register(ComandoCrearOrden)
-def ejecutar_comando_crear_orden(comando: ComandoCrearOrden):
+def ejecutar_comando_crear_orden(comando):
     handler = CrearOrdenHandler()
     productos: list[Producto] = list()
     for item in comando.data.products:

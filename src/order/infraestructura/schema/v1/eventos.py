@@ -9,7 +9,7 @@ class ProductoPayload(Record):
     amount = Integer()
 
 
-class OrdenCreadaPayload(Record):
+class OrdenPayload(Record):
     destiny = String()
     products =Array(ProductoPayload())
 
@@ -21,12 +21,12 @@ class EventoOrdenCreada(EventoIntegracion):
     type = String()
     datacontenttype = String()
     service_name = String()
-    data = OrdenCreadaPayload()
+    data = OrdenPayload()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-class EventoOrdenListadoGenerado(EventoIntegracion):
+class EventoListadoOrdenesGenerado(EventoIntegracion):
     id = String(default=str(uuid.uuid4()))
     time = Long()
     ingestion = Long(default=time_millis())
@@ -34,7 +34,7 @@ class EventoOrdenListadoGenerado(EventoIntegracion):
     type = String()
     datacontenttype = String()
     service_name = String()
-    data = Array(OrdenCreadaPayload())
+    data = Array(OrdenPayload())
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

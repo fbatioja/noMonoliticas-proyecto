@@ -7,4 +7,4 @@ class HandlerOrdenIntegracion(Handler):
     @staticmethod
     def handle_orden_creada(evento):
         despachador = Despachador()
-        despachador.publicar_evento(evento, EventoOrdenCreada, 'eventos-orden') # TODO: Cambiar topico
+        despachador.publicar_evento(evento, EventoOrdenCreada, 'eventos-orden')
