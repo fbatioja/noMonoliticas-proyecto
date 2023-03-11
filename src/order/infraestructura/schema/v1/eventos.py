@@ -25,7 +25,7 @@ class CreatedOrderEvent(EventoIntegracion):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-class EventoOrdenListadoGenerado(EventoIntegracion):
+class EventoListadoOrdenesGenerado(EventoIntegracion):
     id = String(default=str(uuid.uuid4()))
     time = Long()
     ingestion = Long(default=time_millis())

@@ -1,6 +1,6 @@
 
 from order.config.db import db
-from order.dominio.eventos import OrdenCreada
+from order.dominio.eventos import OrdenCreada, OrdenListadoGenerado
 from order.seedwork.dominio.repositorios import Mapeador
 from order.seedwork.infraestructura.utils import unix_time_millis
 from order.dominio.objetos_valor import EstadoOrden, Direccion
@@ -22,6 +22,7 @@ class MapadeadorEventosOrden(Mapeador):
     def __init__(self):
         self.router = {
             Orden: self._entidad_a_orden_creada,
+            OrdenListadoGenerado: self._entidad_a_orden_listado_generado,
         }
 
     def obtener_tipo(self) -> type:
@@ -67,7 +68,44 @@ class MapadeadorEventosOrden(Mapeador):
         if version == 'v1':
             return v1(entidad)
 
-    def entidad_a_dto(self, entidad: OrdenCreada, version=LATEST_VERSION) -> OrdenDTO:
+    def _entidad_a_orden_listado_generado(self, entidad: OrdenListadoGenerado, version=LATEST_VERSION):
+        def v1(evento: OrdenListadoGenerado):
+            from .schema.v1.eventos import EventoListadoOrdenesGenerado, OrdenPayload, ProductoPayload
+            payload = []
+            for orden in evento.ordenes:
+                productsPayload = []
+                for producto in orden.productos:
+                    productoPayload = ProductoPayload(
+                        amount=int(producto.cantidad),
+                        productReference=str(producto.referencia)
+                    )
+                    productsPayload.append(productoPayload)
+                
+                ordenPayload = OrdenPayload(
+                    destiny=str(orden.destino), 
+                    products=productsPayload
+                    )
+                payload.append(ordenPayload)
+
+            evento_integracion = EventoListadoOrdenesGenerado()
+            evento_integracion.specversion = str(version)
+            evento_integracion.type = 'OrdenCreada'
+            evento_integracion.datacontenttype = 'AVRO'
+            evento_integracion.service_name = 'orden'
+            evento_integracion.data = payload
+
+            return evento_integracion
+
+
+
+        if not self.es_version_valida(version):
+            raise Exception(f'No se sabe procesar la version {version}')
+
+        if version == 'v1':
+            return v1(entidad)
+         
+
+    def entidad_a_dto(self, entidad, version=LATEST_VERSION) -> OrdenDTO:
         if not entidad:
             raise NoExisteImplementacionParaTipoFabricaExcepcion
         func = self.router.get(entidad.__class__, None)
@@ -93,6 +131,7 @@ class MapeadorOrden(Mapeador):
         
         productos_dto = []
         for producto in entidad.productos:
+            print(vars(producto))
             producto_dto = ProductoDTO(quantity=producto.cantidad, reference=producto.referencia)
             productos_dto.append(producto_dto)
 

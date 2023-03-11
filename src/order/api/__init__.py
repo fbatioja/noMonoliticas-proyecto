@@ -1,20 +1,25 @@
 import os
 import uuid
-
 from flask import Flask, render_template, request, url_for, redirect, jsonify, session
 from order.dominio.entidades import Producto
-
-#TODO: remover cuando se implemento completo y orden este escuchando el evento
 from order.seedwork.dominio.excepciones import ExcepcionDominio
 from flask import Response
 import json
-#end TODO
+import pulsar
+from pulsar.schema import *
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 def registrar_handlers():
     import order.aplicacion
+
+def comenzar_consumidor(app):
+    import threading
+    import order.infraestructura.consumidores as ordenes
+    threading.Thread(target=ordenes.suscribirse_a_comandos, args=[app]).start()
+    threading.Thread(target=ordenes.suscribirse_a_queries, args=[app]).start()
+
 
 def create_app(configuracion={}):
     # Init la aplicacion de Flask
@@ -41,8 +46,7 @@ def create_app(configuracion={}):
         db.create_all()       
 
         if not app.config.get('TESTING'):
-            #comenzar_consumidor(app)
-            pass
+            comenzar_consumidor(app)
 
     @app.route("/health")
     def health():
@@ -51,16 +55,24 @@ def create_app(configuracion={}):
 
     from order.aplicacion.comandos.crear_orden import CrearOrden
     from order.seedwork.aplicacion.comandos import ejecutar_commando
+    from order.seedwork.aplicacion.queries import ejecutar_query
     from order.aplicacion.mapeadores import MapeadorOrdenDTOJson
+    from order.infraestructura.schema.v1.comandos import QueryGenerarListadoOrdenes
+    from order.aplicacion.queries.obtener_ordenes import ObtenerReserva
+
     @app.route('/orden-comando', methods=('POST',))
-    def orden_asincrona():       
+    def orden_asincrona():
+        # Esta funcion se encuentra aca con propositos de pruebas.
         orden_dict = request.json
         map_orden = MapeadorOrdenDTOJson()
         orden_dto = map_orden.externo_a_dto(orden_dict)
         comando = CrearOrden(orden_dto.state, orden_dto.order_id, orden_dto.destiny, orden_dto.products)
-        ejecutar_commando(comando)
-        
+        ejecutar_commando(comando) 
         return {"orden comando": "ok"}
-        
-
+    
+    @app.route('/orden-query', methods=('GET',))
+    def orden_asincrona():
+             # Esta funcion se encuentra aca con propositos de pruebas.
+            a = QueryGenerarListadoOrdenes(data='')
+            ejecutar_query(a)
     return app
