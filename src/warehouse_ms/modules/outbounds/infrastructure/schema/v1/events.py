@@ -3,10 +3,6 @@ import warehouse_ms.modules.outbounds.domain.value_objects as vo
 from warehouse_ms.seedwork.infrastructure.schema.v1.events import IntegrationEvent
 from warehouse_ms.seedwork.infrastructure.utils import time_millis
 import uuid
-import time
-
-def time_millis():
-    return int(time.time() * 1000)
 
 class EventoIntegracion(Record):
     id = String(default=str(uuid.uuid4()))
@@ -53,7 +49,7 @@ class OutboundProductPayload(Record):
 
 class WarehouseOrderPayload(Record):
     origin: LocationPayload()
-    products: Array(OutboundProductPayload())
+    products: Array(ProductoPayload())
 
 class CanceledOrderPayload(Record):
     order_id: String()
@@ -64,8 +60,7 @@ class CanceledOrderPayload(Record):
 class CreatedOutboundPayload(Record):
     order_id: String()
     warehouses: Array(WarehouseOrderPayload())
-    destination: LocationPayload()
-    created_date: Long()
+    destination: String()
 
 class CanceledOutboundPayload(Record):
     order_id: String()
@@ -103,7 +98,7 @@ class CanceledOrderEvent(IntegrationEvent):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-class CreatedOutboundEvent(IntegrationEvent):
+class CreatedOutboundEvent(EventoIntegracion):
     id = String(default=str(uuid.uuid4()))
     time = Long()
     ingestion = Long(default=time_millis())

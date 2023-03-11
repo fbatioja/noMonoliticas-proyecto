@@ -3,6 +3,7 @@ from pulsar.schema import *
 
 import logging
 import traceback
+import uuid
 
 from warehouse_ms.modules.outbounds.infrastructure.schema.v1.events import CreatedOrderEvent, EventoOrdenCreada
 from warehouse_ms.modules.outbounds.infrastructure.projections import OrderCreatedProjection
@@ -24,9 +25,9 @@ def _subscribe_to_events(app, topic, subscription_name, schema):
             data = message.value().data
             print(f'Received event: {data}')
 
-            execute_projection(OrderCreatedProjection('88232a5d-61e3-4550-b190-b8bdd3e6dd0f', data.products, data.destiny), app=app)
+            execute_projection(OrderCreatedProjection(uuid.uuid4(), data.products, data.destiny), app=app)
 
-            consumer.acknowledge(message)     
+            consumer.acknowledge(message)
 
         client.close()
     except:

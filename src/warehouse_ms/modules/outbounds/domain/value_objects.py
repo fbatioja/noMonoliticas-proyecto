@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from warehouse_ms.seedwork.domain.value_objects import ValueObject
+import uuid
 
 @dataclass(frozen=True)
 class Location(ValueObject):
@@ -23,6 +24,12 @@ class OutboundProduct(ValueObject):
 @dataclass(frozen=True)
 class WarehouseProduct(ValueObject):
     reference: Reference
+
+@dataclass(frozen=True)
+class WarehouseProductPair(ValueObject):
+    warehouse_id: uuid.UUID
+    origin: Location
+    product: OutboundProduct
 
 @dataclass(frozen=True)
 class WarehouseOrder(ValueObject):

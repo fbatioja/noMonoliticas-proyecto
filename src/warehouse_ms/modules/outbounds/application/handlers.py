@@ -10,16 +10,16 @@ class OutboundIntegrationHandler(Handler):
         dispatcher.publish_event(event, 'order-created')
 
     @staticmethod
-    def handle_canceled_order(event: CanceledOrderEvent()):
+    def handle_canceled_order(event: CanceledOrderEvent):
         dispatcher = Dispatcher()
         dispatcher.publish_event(event, 'order-canceled')
 
     @staticmethod
-    def handle_created_outbound(event: CreatedOutboundEvent()):
+    def handle_created_outbound(event: CreatedOutboundEvent):
         dispatcher = Dispatcher()
         dispatcher.publish_event(event, 'outbound-created')
 
     @staticmethod
-    def handle_canceled_outbound(event: CanceledOutboundEvent()):
+    def handle_canceled_outbound(event: CanceledOutboundEvent):
         dispatcher = Dispatcher()
         dispatcher.publish_event(event, 'outbound-canceled')

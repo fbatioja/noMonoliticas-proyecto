@@ -32,7 +32,7 @@ def createRoadMapDB(cursor, connection, orderId):
 
 def processCreateDelivery(cursor, connection, data):
 
-    roadMapId = createRoadMapDB(cursor, connection, data['orderId'])
+    roadMapId = createRoadMapDB(cursor, connection, data['order_id'])
     roadmapData = {"roadMapId": roadMapId, "deliveries": []}
     for warehouse in data['warehouses']:
         cursor.execute("INSERT INTO DELIVERY (road_map_id, origin, destination, status) VALUES (%s, %s, %s, %s) RETURNING id", (roadMapId, warehouse['origin'], data['destiny'], 'CREATED'))

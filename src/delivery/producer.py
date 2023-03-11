@@ -4,7 +4,7 @@ import json
 client = pulsar.Client('pulsar://localhost:6650')
 producer = client.create_producer('outbound-created')
 data = {
-    "orderId": 'e14c15a0-a98a-4d26-8b42-8443851ad1c6',
+    "order_id": 'e14c15a0-a98a-4d26-8b42-8443851ad1c6',
     "warehouses": [{
         "origin": 'Warehouse 1',
         "products": [
