@@ -36,22 +36,22 @@ class MapadeadorEventosOrden(Mapeador):
 
     def _entidad_a_orden_creada(self, entidad: OrdenCreada, version=LATEST_VERSION):
         def v1(evento):
-            from .schema.v1.eventos import EventoOrdenCreada, OrdenPayload, ProductoPayload
+            from .schema.v1.eventos import CreatedOrderEvent, CreatedOrderPayload, OutboundProductPayload
 
             productsPayload = []
             for producto in evento.productos:
-                productoPayload = ProductoPayload(
+                productoPayload = OutboundProductPayload(
                     amount=int(producto.cantidad),
                     productReference=str(producto.referencia)
                 )
                 productsPayload.append(productoPayload)
 
-            payload = OrdenPayload( 
+            payload = CreatedOrderPayload( 
                 destiny=str(evento.destino.direccion), 
                 products=productsPayload, 
             )
 
-            evento_integracion = EventoOrdenCreada(id=str(evento.id))
+            evento_integracion = CreatedOrderEvent(id=str(evento.id))
             evento_integracion.id = str(evento.id)
             evento_integracion.time = int(unix_time_millis(evento.fecha_creacion))
             evento_integracion.specversion = str(version)

@@ -1,7 +1,7 @@
 import pulsar
 from pulsar.schema import *
 
-from order.infraestructura.schema.v1.eventos import EventoOrdenCreada
+from order.infraestructura.schema.v1.eventos import CreatedOrderEvent
 from order.seedwork.infraestructura import utils
 
 from order.infraestructura.mapeadores import MapadeadorEventosOrden
