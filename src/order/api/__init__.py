@@ -59,6 +59,7 @@ def create_app(configuracion={}):
     from order.aplicacion.mapeadores import MapeadorOrdenDTOJson
     from order.infraestructura.schema.v1.comandos import QueryGenerarListadoOrdenes
     from order.aplicacion.queries.obtener_ordenes import ObtenerReserva
+    from order.aplicacion.queries.obtener_ordenes_sincrona import ObtenerReservaSincrona
 
     @app.route('/orden-comando', methods=('POST',))
     def orden_asincrona():
@@ -69,10 +70,11 @@ def create_app(configuracion={}):
         comando = CrearOrden(orden_dto.state, orden_dto.order_id, orden_dto.destiny, orden_dto.products)
         ejecutar_commando(comando) 
         return {"orden comando": "ok"}
-    
+
     @app.route('/orden-query', methods=('GET',))
-    def orden_asincrona():
-             # Esta funcion se encuentra aca con propositos de pruebas.
-            a = QueryGenerarListadoOrdenes(data='')
-            ejecutar_query(a)
+    def get_orden_sincrona():
+        ordenes = ejecutar_query(ObtenerReservaSincrona(id=''))
+        map = MapeadorOrdenDTOJson()
+        return [map.dto_a_externo(orden) for orden in ordenes]
+
     return app

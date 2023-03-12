@@ -9,6 +9,7 @@ class ProductPayload(Record):
     amount = Integer()
 
 class OrderPayload(Record):
+    order_id = String(default=str(uuid.uuid4()))
     destiny = String()
     products =Array(ProductPayload())
 

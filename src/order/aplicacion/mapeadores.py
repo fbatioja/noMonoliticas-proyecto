@@ -51,17 +51,14 @@ class MapeadorOrden(RepMap):
 
     def entidad_a_dto(self, entidad: Orden) -> OrderDTO:
 
-        state = entidad.state
-        destiny = entidad.fdestiny
-        order_id = str(entidad.order_id)
+        state = entidad.estado
+        destiny = entidad.destino
+        order_id = str(entidad.id)
         products = list()
 
-        for item in entidad.products:
-            product_reference: str =item 
-            quantity: int = field(default_factory=int)
-
-            product_reference = item.product_reference
-            quantity = item.quantity
+        for item in entidad.productos:
+            product_reference =item.referencia 
+            quantity = item.cantidad
             producto_dto = ProductDTO(product_reference=product_reference, quantity=quantity)
             products.append(producto_dto)
         
