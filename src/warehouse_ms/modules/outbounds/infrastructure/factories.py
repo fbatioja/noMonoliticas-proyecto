@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from warehouse_ms.seedwork.domain.factories import Factory
 from warehouse_ms.seedwork.domain.repositories import Repository
-from warehouse_ms.modules.outbounds.domain.repositories import OutboundsEventsRepository, OutboundsRepository, WarehouseProductsRepository, WarehousesRepository
-from .repositories import OutboundsEventsRepositorySQLAlchemy, OutboundsRepositorySQLAlchemy, WarehouseProductsRepositorySQLAlchemy, WarehousesRepositorySQLAlchemy
+from warehouse_ms.modules.outbounds.domain.repositories import OutboundsEventsRepository, OutboundsRepository, WarehouseProductsRepository, WarehousesRepository, ProductsRepository
+from .repositories import OutboundsEventsRepositorySQLAlchemy, OutboundsRepositorySQLAlchemy, WarehouseProductsRepositorySQLAlchemy, WarehousesRepositorySQLAlchemy, ProductsRepositorySQLAlchemy
 from .exceptions import FactoryException
 
 @dataclass
@@ -16,5 +16,7 @@ class RepositoryFactory(Factory):
             return WarehouseProductsRepositorySQLAlchemy()
         elif obj == WarehousesRepository:
             return WarehousesRepositorySQLAlchemy()
+        elif obj == ProductsRepository():
+            return ProductsRepositorySQLAlchemy()
         else:
             raise FactoryException(f'Factory for object {obj} does not exists')

@@ -1,11 +1,17 @@
 from schemas import CreatedOutboundEvent
-from delivery_controller import processCreateDelivery
+from delivery_controller import processCreateDelivery, sendCanceledOutboundEvent
 import psycopg2
 from psycopg2 import Error
 import pulsar,_pulsar  
 from pulsar.schema import *
 import json
 import os
+
+def is_valid_outbound(data):
+    try:
+        return not data.destination.startswith("xxx")
+    except (Exception, Error) as error:
+        return False
 
 db_user = os.environ.get('DB_USER', 'delivery_user')
 db_password = os.environ.get('DB_PASSWORD', '987654321')
@@ -71,14 +77,18 @@ except (Exception, Error) as error:
     print("Error while connecting to PostgreSQL", error)
 
 client = pulsar.Client(pulsar_host)
-consumer = client.subscribe(pulsar_subs_topic, consumer_type=_pulsar.ConsumerType.Shared, subscription_name=pulse_subs_name, schema=AvroSchema(CreatedOutboundEvent))
+consumer = client.subscribe('outbound-created', consumer_type=_pulsar.ConsumerType.Shared, subscription_name='eds-sub-events', schema=AvroSchema(CreatedOutboundEvent))
 
 while True:
-    msg = consumer.receive()    
+    msg = consumer.receive()
     data = msg.value().data
     print(f'Received event: {data}')
-    processCreateDelivery(cursor, connection, data)
-    print("Order processed...")
+    if is_valid_outbound(data):
+        processCreateDelivery(cursor, connection, data)
+        print("Order processed...")
+    else:
+        sendCanceledOutboundEvent(data)
+
     consumer.acknowledge(msg)
 
 client.close()

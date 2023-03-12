@@ -12,7 +12,7 @@ class Warehouse(Entity):
     location: vo.Location = field(default_factory=vo.Location)
 
 @dataclass
-class Product(Entity):
+class WarehouseProduct(Entity):
     warehouse_product: vo.WarehouseProduct = field(default_factory=vo.WarehouseProduct)
     warehouse_id: uuid.UUID = field(hash=True, default=None)
     available: int = field(default=0)
@@ -43,3 +43,9 @@ class Outbound(RootAggregation):
 
         self.add_event(OutboundCreated(self.id, self.modification_date, self.order_id, self.product_order, self.destination, self.created_date), 
                        OutboundCanceled(self.id, self.modification_date, self.order_id, self.product_order, self.destination, self.modification_date))
+
+@dataclass
+class Product(Entity): 
+    reference: vo.Reference = field(default_factory=vo.Reference)
+    amount: vo.Amount = field(default_factory=vo.Amount)
+    outbound_id: uuid.UUID = field(hash=True, default=None)

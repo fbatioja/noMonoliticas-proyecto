@@ -6,6 +6,7 @@ from sagas.aplicacion.repositories import RepositorioSagasSQLAlchemy
 class CoordinadorReservas():
 
     def persistir_en_saga_log(self, mensaje: dict):
+        print(mensaje)
         repositorio = RepositorioSagasSQLAlchemy()
         record = SagaLog()
         record.transaction_id = mensaje.get('data', {}).get('order_id') 

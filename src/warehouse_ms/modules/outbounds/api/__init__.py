@@ -19,6 +19,7 @@ def start_consumers(app):
 
     # Events subscriptions
     threading.Thread(target=outbounds.subscribe_to_created_order_event, args=[app]).start()
+    threading.Thread(target=outbounds.subscribe_to_canceled_order_event, args=[app]).start()
 
     # Commands subscriptions
 
