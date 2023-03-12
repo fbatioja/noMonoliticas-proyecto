@@ -36,17 +36,17 @@ class MapadeadorEventosOrden(Mapeador):
 
     def _entidad_a_orden_creada(self, entidad: OrdenCreada, version=LATEST_VERSION):
         def v1(evento):
-            from .schema.v1.eventos import CreatedOrderEvent, CreatedOrderPayload, OutboundProductPayload
+            from .schema.v1.eventos import CreatedOrderEvent, OrderPayload, ProductPayload
 
             productsPayload = []
             for producto in evento.productos:
-                productoPayload = OutboundProductPayload(
+                productoPayload = ProductPayload(
                     amount=int(producto.cantidad),
                     productReference=str(producto.referencia)
                 )
                 productsPayload.append(productoPayload)
 
-            payload = CreatedOrderPayload( 
+            payload = OrderPayload( 
                 destiny=str(evento.destino.direccion), 
                 products=productsPayload, 
             )
@@ -70,18 +70,18 @@ class MapadeadorEventosOrden(Mapeador):
 
     def _entidad_a_orden_listado_generado(self, entidad: OrdenListadoGenerado, version=LATEST_VERSION):
         def v1(evento: OrdenListadoGenerado):
-            from .schema.v1.eventos import EventoListadoOrdenesGenerado, OrdenPayload, ProductoPayload
+            from .schema.v1.eventos import EventoListadoOrdenesGenerado, ProductPayload,OrderPayload, ProductPayload
             payload = []
             for orden in evento.ordenes:
                 productsPayload = []
                 for producto in orden.productos:
-                    productoPayload = ProductoPayload(
+                    productoPayload = ProductPayload(
                         amount=int(producto.cantidad),
                         productReference=str(producto.referencia)
                     )
                     productsPayload.append(productoPayload)
                 
-                ordenPayload = OrdenPayload(
+                ordenPayload = OrderPayload(
                     destiny=str(orden.destino), 
                     products=productsPayload
                     )
