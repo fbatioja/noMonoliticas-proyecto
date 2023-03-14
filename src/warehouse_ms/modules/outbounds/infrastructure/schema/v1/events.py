@@ -34,8 +34,12 @@ class EventoOrdenCreada(EventoIntegracion):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+class OrdenCanceladaPayload(Record):
+    destiny = String()
+    products =Array(ProductoPayload())
+
 class LocationPayload(Record):
-    address: String()
+    address= String()
 
 class ReferencePayload(Record):
     reference: String()
@@ -48,8 +52,8 @@ class OutboundProductPayload(Record):
     amount: Integer()
 
 class WarehouseOrderPayload(Record):
-    origin: LocationPayload()
-    products: Array(ProductoPayload())
+    origin= String()
+    products= Array(ProductoPayload())
 
 class CanceledOrderPayload(Record):
     order_id: String()
@@ -58,9 +62,9 @@ class CanceledOrderPayload(Record):
     modification_date: Long()
 
 class CreatedOutboundPayload(Record):
-    order_id: String()
-    warehouses: Array(WarehouseOrderPayload())
-    destination: String()
+    order_id = String()
+    warehouses = Array(WarehouseOrderPayload())
+    destination = String()
 
 class CanceledOutboundPayload(Record):
     order_id: String()
@@ -72,7 +76,21 @@ class CreatedOrderPayload(Record):
     products: Array(OutboundProductPayload())
     destiny: String()
 
-class CreatedOrderEvent(IntegrationEvent()):
+class ProductPayload(Record):
+    productReference = String()
+    amount = Integer()
+
+class OrderPayload(Record):
+    order_id = String(default=str(uuid.uuid4()))
+    destiny = String()
+    products =Array(ProductPayload())
+
+class OrdenCanceladaPayload(Record):
+    order_id = String()
+    destiny = String()
+    products =Array(ProductoPayload())
+
+class CreatedOrderEvent(EventoIntegracion):
     id = String(default=str(uuid.uuid4()))
     time = Long()
     ingestion = Long(default=time_millis())
@@ -80,12 +98,12 @@ class CreatedOrderEvent(IntegrationEvent()):
     type = String()
     datacontenttype = String()
     service_name = String()
-    data = CreatedOrderPayload()
+    data = OrderPayload()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-class CanceledOrderEvent(IntegrationEvent):
+class CanceledOrderEvent(EventoIntegracion):
     id = String(default=str(uuid.uuid4()))
     time = Long()
     ingestion = Long(default=time_millis())
@@ -93,7 +111,7 @@ class CanceledOrderEvent(IntegrationEvent):
     type = String()
     datacontenttype = String()
     service_name = String()
-    data = CanceledOrderPayload()
+    data = OrdenCanceladaPayload()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

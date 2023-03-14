@@ -1,12 +1,13 @@
 from warehouse_ms.config.db import db
-from warehouse_ms.modules.outbounds.domain.repositories import WarehousesRepository, WarehouseProductsRepository, OutboundsEventsRepository, OutboundsRepository
-from warehouse_ms.modules.outbounds.domain.entities import Warehouse, Product, Outbound
-from warehouse_ms.modules.outbounds.domain.factories import OutboundEventFactory, OutboundFactory, WarehouseFactory, WarehouseProductFactory
+from warehouse_ms.modules.outbounds.domain.repositories import WarehousesRepository, WarehouseProductsRepository, OutboundsEventsRepository, OutboundsRepository, ProductsRepository
+from warehouse_ms.modules.outbounds.domain.entities import Warehouse, WarehouseProduct, Outbound, Product
+from warehouse_ms.modules.outbounds.domain.factories import OutboundEventFactory, OutboundFactory, WarehouseFactory, WarehouseProductFactory, ProductFactory
 from .dto import Outbound as OutboundDTO
 from .dto import Warehouse as WarehouseDTO
 from .dto import WarehouseProduct as WarehouseProductDTO
+from .dto import Product as ProductDTO
 from .dto import OutboundEvents
-from .mappers import OutboundEventsMapper, OutboundMapper, WarehouseMapper, WarehouseProductMapper
+from .mappers import OutboundEventsMapper, OutboundMapper, WarehouseMapper, WarehouseProductMapper, ProductMapper
 from uuid import UUID
 from pulsar.schema import *
 
@@ -49,19 +50,19 @@ class WarehouseProductsRepositorySQLAlchemy(WarehouseProductsRepository):
     def factory(self):
         return self._factory
 
-    def find_by_id(self, id: UUID) -> Product:
+    def find_by_id(self, id: UUID) -> WarehouseProduct:
         product_dto = db.session.query(WarehouseProductDTO).filter_by(id=str(id)).one()
         return self.factory.create_object(product_dto, WarehouseProductMapper())
 
-    def find_all(self) -> list[Product]:
+    def find_all(self) -> list[WarehouseProduct]:
         # TODO
         raise NotImplementedError
 
-    def add(self, entity: Product):
+    def add(self, entity: WarehouseProduct):
         # TODO
         raise NotImplementedError
 
-    def update(self, entity: Product):
+    def update(self, entity: WarehouseProduct):
         product_dto = db.session.query(WarehouseProductDTO).filter_by(id=str(entity.warehouse_product.reference.productReference)).one()
         product_dto.available = entity.available
         product_dto.reserved = entity.reserved
@@ -124,6 +125,10 @@ class OutboundsRepositorySQLAlchemy(OutboundsRepository):
         outbound_dto = db.session.query(OutboundDTO).filter_by(id=str(id)).one()
         return self.factory.create_object(outbound_dto, OutboundMapper())
 
+    def find_by_order_id(self, order_id: UUID) -> Outbound:
+        outbound_dto = db.session.query(OutboundDTO).filter_by(order_id=str(order_id)).one()
+        return self.factory.create_object(outbound_dto, OutboundMapper())
+
     def find_all(self) -> list[Outbound]:
         raise NotImplementedError
 
@@ -137,4 +142,37 @@ class OutboundsRepositorySQLAlchemy(OutboundsRepository):
         raise NotImplementedError
 
     def delete(self, outbound_id: UUID):
+        raise NotImplementedError
+
+class ProductsRepositorySQLAlchemy(ProductsRepository):
+    def __init__(self):
+        self._factory: ProductFactory = ProductFactory()
+
+    @property
+    def factory(self):
+        return self._factory
+
+    def find_by_id(self, id: UUID) -> Product:
+        product_dto = db.session.query(ProductDTO).filter_by(id=str(id)).one()
+        return self.factory.create_object(product_dto, ProductMapper())
+
+    def find_by_outbound_id(self, outbound_id: UUID) -> list[Product]:
+        products_dto = db.session.query(ProductDTO).filter_by(outbound_id=str(outbound_id)).all()
+        products = []
+        for product_dto in products_dto:
+            product = self.factory.create_object(product_dto, ProductMapper())
+            products.append(product)
+
+        return products
+
+    def find_all(self) -> list[Product]:
+        raise NotImplementedError
+
+    def add(self, entity: Product):
+        raise NotImplementedError
+
+    def update(self, product: Product):
+        raise NotImplementedError
+
+    def delete(self, product_id: UUID):
         raise NotImplementedError

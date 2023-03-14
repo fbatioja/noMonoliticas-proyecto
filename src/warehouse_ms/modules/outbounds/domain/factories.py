@@ -1,6 +1,6 @@
 from .events import OutboundEvent
-from .entities import Outbound, Product, Warehouse
-from .rules import ValidAvailableStock, ValidReservedStock, ValidWarehouseOrder, ValidLocation
+from .entities import Outbound, WarehouseProduct, Warehouse
+from .rules import ValidAvailableStock, ValidReservedStock, ValidWarehouseOrder, ValidLocation, ValidProductOrder
 from .exceptions import ObjectTypeDoesNotExistsInOutboundsDomainException
 from warehouse_ms.seedwork.domain.repositories import Mapper
 from warehouse_ms.seedwork.domain.factories import Factory
@@ -15,10 +15,6 @@ class _OutboundFactory(Factory):
             return mapper.entity_to_dto(obj)
         else:
             outbound: Outbound = mapper.dto_to_entity(obj)
-
-            [self.validate_rule(ValidAvailableStock(product.stock)) for product in outbound.product_order.products]
-            [self.validate_rule(ValidReservedStock(product.stock)) for product in outbound.product_order.products]
-            self.validate_rule(ValidWarehouseOrder(outbound.product_order))
             
             return outbound
 
@@ -36,7 +32,7 @@ class _WarehouseProductFactory(Factory):
         if isinstance(obj, Entity) or isinstance(obj, DomainEvent):
             return mapper.entity_to_dto(obj)
         else:
-            product: Product = mapper.dto_to_entity(obj)
+            product: WarehouseProduct = mapper.dto_to_entity(obj)
 
             self.validate_rule(ValidAvailableStock(product.available))
             self.validate_rule(ValidReservedStock(product.reserved))
@@ -76,7 +72,7 @@ class OutboundEventFactory(Factory):
 @dataclass
 class WarehouseProductFactory(Factory):
     def create_object(self, obj: any, mapper: Mapper) -> any:
-        if mapper.get_type() == Product.__class__:
+        if mapper.get_type() == WarehouseProduct.__class__:
             product_factory = _WarehouseProductFactory()
             return product_factory.create_object(obj, mapper)
         else:
@@ -88,5 +84,14 @@ class WarehouseFactory(Factory):
         if mapper.get_type() == Warehouse.__class__:
             warehouse_factory = _WarehouseFactory()
             return warehouse_factory.create_object(obj, mapper)
+        else:
+            raise ObjectTypeDoesNotExistsInOutboundsDomainException()
+
+@dataclass
+class ProductFactory(Factory):
+    def create_object(self, obj: any, mapper: Mapper) -> any:
+        if mapper.get_type() == WarehouseProduct.__class__:
+            product_factory = _WarehouseFactory()
+            return product_factory.create_object(obj, mapper)
         else:
             raise ObjectTypeDoesNotExistsInOutboundsDomainException()

@@ -17,4 +17,6 @@ class Dispatcher:
 
     def publish_event(self, event, topic):
         event = self.mapper.entity_to_dto(event)
+        print(f'Sended event: {event}')
+        print(f'Sended data: {event.data}')
         self._publish_message(event, topic, AvroSchema(event.__class__))

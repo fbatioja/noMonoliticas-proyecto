@@ -10,9 +10,9 @@ def comenzar_consumidor(app):
     import threading
 
     threading.Thread(target=ordenes.suscribirse_a_ordenes, args=[app]).start()
-    #threading.Thread(target=ordenes.suscribirse_a_bodega, args=[app]).start()
-    #threading.Thread(target=suscribirse_a_entrega, args=[app]).start()
-    #threading.Thread(target=suscribirse_a_entrega_fallos, args=[app]).start()
+    threading.Thread(target=ordenes.suscribirse_a_bodega, args=[app]).start()
+    threading.Thread(target=ordenes.suscribirse_a_entrega, args=[app]).start()
+    threading.Thread(target=ordenes.suscribirse_a_entrega_fallos, args=[app]).start()
 
 def create_app(configuracion={}):
     # Init la aplicacion de Flask

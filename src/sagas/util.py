@@ -14,7 +14,8 @@ def millis_a_datetime(millis):
 def consultar_schema_registry(topico: str) -> dict:
     json_registry = requests.get(f'http://{broker_host()}:8080/admin/v2/schemas/{topico}/schema').json()
     print(json_registry)
-    return json.loads(json_registry.get('data',{}))
+    empty_json = json.dumps({})
+    return json.loads(json_registry.get('data',empty_json))
 
 from fastavro.schema import parse_schema
 def obtener_schema_avro_de_diccionario(json_schema: dict) -> AvroSchema:

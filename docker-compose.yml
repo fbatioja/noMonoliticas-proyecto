@@ -133,7 +133,7 @@ services:
   # PostgreSQL
   dbdelivery:
     container_name: db-delivery
-    profiles: [ "delivery" ]
+    profiles: [ "deliverydb" ]
     image: postgres
     environment:
       POSTGRES_PASSWORD: 987654321

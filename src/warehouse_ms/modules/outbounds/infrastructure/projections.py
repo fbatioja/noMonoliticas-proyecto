@@ -3,7 +3,7 @@ from warehouse_ms.seedwork.infrastructure.projections import Projection, Project
 from warehouse_ms.seedwork.infrastructure.projections import execute_projection as projection
 from warehouse_ms.modules.outbounds.infrastructure.dto import Outbound as OutboundDTO
 from warehouse_ms.modules.outbounds.infrastructure.factories import RepositoryFactory
-from warehouse_ms.modules.outbounds.infrastructure.repositories import OutboundsRepository, WarehouseProductsRepository, WarehousesRepository
+from warehouse_ms.modules.outbounds.infrastructure.repositories import OutboundsRepository, WarehouseProductsRepository, WarehousesRepository, ProductsRepository
 from warehouse_ms.modules.outbounds.domain.entities import Outbound
 import warehouse_ms.modules.outbounds.domain.value_objects as vo
 
@@ -88,7 +88,35 @@ class OrderCreatedProjection(OutboundsProjection):
         except Exception as e:
             print("ERROR: Publishing event: ", e)
 
+class OrderCanceledProjection(OutboundsProjection):
+    def __init__(self, order_id, product_order, destination):
+        self.outbound_id = id
+        self.order_id = order_id
+        self.product_order = product_order
+        self.destination = vo.Location(destination)
+    
+    def execute(self, db=None):
+        if not db:
+            logging.error('ERROR: app DB cannot be null')
+            return
+        
+        # outbound creation
+        repository_factory = RepositoryFactory()
+        repository = repository_factory.create_object(OutboundsRepository)
+
+        outbound = repository.find_by_order_id(self.order_id)
+
+        product_repository = repository_factory.create_object(WarehouseProductsRepository)
+
+        # warehouse product updating
+
+        for product_order in self.product_order:
+            product = product_repository.find_by_id(product_order.productReference)
+            product.cancel_stock(product_order.amount)
+            product_repository.update(product)
+
 @projection.register(OrderCreatedProjection)
+@projection.register(OrderCanceledProjection)
 def execute_outbound_projection(projection, app=None):
     if not app:
         logging.error('ERROR: app context cannot be null')

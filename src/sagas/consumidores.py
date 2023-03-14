@@ -23,10 +23,14 @@ def suscribirse_a_entrega_fallos(app=None):
 def suscribirse_a_topico(topico, suscriptionName, schema, app=None):
     cliente = None
     try:
-        json_schema = consultar_schema_registry(schema)  
-        avro_schema = obtener_schema_avro_de_diccionario(json_schema)
-        cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
-        consumidor = cliente.subscribe(topico, consumer_type=_pulsar.ConsumerType.Shared, subscription_name=suscriptionName, schema=avro_schema)
+        if schema is not None:
+            json_schema = consultar_schema_registry(schema)  
+            avro_schema = obtener_schema_avro_de_diccionario(json_schema)
+            cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+            consumidor = cliente.subscribe(topico, consumer_type=_pulsar.ConsumerType.Shared, subscription_name=suscriptionName, schema=avro_schema)
+        else:
+            cliente = pulsar.Client(f'pulsar://{utils.broker_host()}:6650')
+            consumidor = cliente.subscribe(topico, consumer_type=_pulsar.ConsumerType.Shared, subscription_name=suscriptionName)
 
         while True:
             mensaje = consumidor.receive()

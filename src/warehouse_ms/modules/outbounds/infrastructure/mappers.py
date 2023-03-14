@@ -1,7 +1,7 @@
 from warehouse_ms.seedwork.domain.repositories import Mapper
 from warehouse_ms.seedwork.infrastructure.utils import unix_time_millis
-from warehouse_ms.modules.outbounds.domain.value_objects import Amount, Location, Reference, WarehouseProduct, OutboundProduct, WarehouseOrder, ProductOrder
-from warehouse_ms.modules.outbounds.domain.entities import Warehouse, Product, Outbound
+import warehouse_ms.modules.outbounds.domain.value_objects as vo
+from warehouse_ms.modules.outbounds.domain.entities import Warehouse, WarehouseProduct, Outbound, Product
 from warehouse_ms.modules.outbounds.domain.events import OrderCreated, OrderCanceled, OutboundCreated, OutboundCanceled, OutboundEvent
 
 from .dto import Warehouse as WarehouseDTO
@@ -26,7 +26,7 @@ class WarehouseMapper(Mapper):
         return warehouse_dto
 
     def dto_to_entity(self, dto: WarehouseDTO) -> Warehouse:
-        location = Location(dto.address)
+        location = vo.Location(dto.address)
 
         warehouse = Warehouse(dto.id, dto.created_date, dto.modification_date, location)
         
@@ -35,9 +35,9 @@ class WarehouseMapper(Mapper):
 class WarehouseProductMapper(Mapper):
 
     def get_type(self) -> type:
-        return Product.__class__
+        return WarehouseProduct.__class__
 
-    def entity_to_dto(self, entity: Product) -> WarehouseProductDTO:
+    def entity_to_dto(self, entity: WarehouseProduct) -> WarehouseProductDTO:
         product_dto = WarehouseProductDTO()
         product_dto.id = str(entity.id)
         product_dto.created_date = entity.created_date
@@ -49,11 +49,11 @@ class WarehouseProductMapper(Mapper):
 
         return product_dto
 
-    def dto_to_entity(self, dto: WarehouseProductDTO) -> Product:
-        reference = Reference(dto.reference)
-        warehouse_product = WarehouseProduct(reference)
+    def dto_to_entity(self, dto: WarehouseProductDTO) -> WarehouseProduct:
+        reference = vo.Reference(dto.reference)
+        warehouse_product = vo.WarehouseProduct(reference=reference)
 
-        product = Product(dto.id, dto.created_date, dto.modification_date, warehouse_product, dto.warehouse_id, dto.available, dto.reserved)
+        product = WarehouseProduct(dto.id, dto.created_date, dto.modification_date, warehouse_product, dto.warehouse_id, dto.available, dto.reserved)
         
         return product
     
@@ -62,21 +62,20 @@ class OutboundMapper(Mapper):
     def get_type(self) -> type:
         return Outbound.__class__
     
-    def _process_order_products_dto(self, products_dto: list[ProductDTO]) -> WarehouseOrder:
+    def _process_order_products_dto(self, products_dto: list[ProductDTO]) -> vo.ProductOrder:
         products = list()
-        warehouse_order = WarehouseOrder()
 
         for product_dto in products_dto:
-            reference = Reference(product_dto.reference)
-            amount = Amount(product_dto.amount)
-            product = OutboundProduct(reference, amount)
+            reference = vo.Reference(product_dto.reference)
+            amount = vo.Amount(product_dto.amount)
+            product = vo.OutboundProduct(reference, amount)
             
             products.append(product)
-
-        warehouse_order.products = products
-        return warehouse_order
+        
+        product_order = vo.ProductOrder(products)
+        return product_order
     
-    def _process_order_products(self, order: ProductOrder) -> list[ProductDTO]:
+    def _process_order_products(self, order: vo.ProductOrder) -> list[ProductDTO]:
         products_dto = list()
 
         for product in order:
@@ -104,7 +103,7 @@ class OutboundMapper(Mapper):
         return outbound_dto
     
     def dto_to_entity(self, dto: OutboundDTO) -> Outbound:
-        destination = Location(dto.destination)
+        destination = vo.Location(dto.destination)
         outbound = Outbound(id=dto.id, created_date=dto.created_date, modification_date=dto.modification_date, order_id=dto.order_id, destination=destination)
 
         outbound.product_order = self._process_order_products_dto(dto.products)
@@ -168,11 +167,27 @@ class OutboundEventsMapper(Mapper):
     
     def _entity_to_created_outbound(self, entity: OutboundCreated, version=LATEST_VERSION):
         def v1(event):
-            from .schema.v1.events import CreatedOutboundPayload, CreatedOutboundEvent
+            from .schema.v1.events import CreatedOutboundPayload, CreatedOutboundEvent, WarehouseOrderPayload, ProductoPayload
+
+            warehouses = []
+            for warehouse in event.warehouses:
+                products = []
+                for product in warehouse.products:
+                    product_payload = ProductoPayload(
+                        productReference = product.productReference,
+                        amount = product.amount
+                    )
+                    products.append(product_payload)
+
+                warehouse_payload = WarehouseOrderPayload(
+                    origin = warehouse.origin.address,
+                    products = products
+                )
+                warehouses.append(warehouse_payload)
 
             payload = CreatedOutboundPayload(
-                order_id=str(event.order_id), 
-                warehouses=str(event.warehouses), 
+                order_id=str(event.order_id),
+                warehouses=warehouses,
                 destination=str(event.destination.address)
             )
             integration_event = CreatedOutboundEvent(id=str(event.id))
@@ -183,7 +198,6 @@ class OutboundEventsMapper(Mapper):
             integration_event.datacontenttype = 'AVRO'
             integration_event.service_name = 'eds'
             integration_event.data = payload
-
             return integration_event
                     
         if not self.is_valid_version(version):
@@ -208,3 +222,25 @@ class OutboundEventsMapper(Mapper):
 
     def dto_to_entity(self, dto: OutboundDTO, version=LATEST_VERSION) -> Outbound:
         raise NotImplementedError
+
+class ProductMapper(Mapper):
+
+    def get_type(self) -> type:
+        return Product.__class__
+
+    def entity_to_dto(self, entity: Product) -> ProductDTO:
+        product_dto = ProductDTO()
+        product_dto.id = str(entity.id)
+        product_dto.reference = entity.reference.productReference
+        product_dto.amount = entity.amount.amount
+        product_dto.outbound_id = entity.outbound_id
+
+        return product_dto
+
+    def dto_to_entity(self, dto: ProductDTO) -> Product:
+        reference = vo.Reference(dto.reference)
+        amount = vo.Amount(dto.amount)
+
+        product = Product(dto.id, outbound_id=dto.outbound_id, amount=amount, reference=reference)
+        
+        return product
