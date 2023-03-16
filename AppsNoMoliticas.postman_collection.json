@@ -1,70 +1,93 @@
 {
 	"info": {
-		"_postman_id": "2422e3dc-bc1f-4369-9dd8-2c897f4732b0",
+		"_postman_id": "4cd8b8e8-a3e5-4cdd-9925-efdf100ac133",
 		"name": "AppsNoMoliticas",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "4445445"
 	},
 	"item": [
 		{
-			"name": "health",
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
+			"name": "Crear Orden BFF exitosa",
 			"request": {
-				"method": "GET",
+				"method": "POST",
 				"header": [],
 				"body": {
-					"mode": "raw",
-					"raw": "",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
+					"mode": "graphql",
+					"graphql": {
+						"query": "mutation MyMutation {\n  crearOrden(\n    orden: {\n      orderId: \"1\",\n      products: [\n        {productReference: \"61232a5d-61e3-4550-b190-b8bdd3e6dd0f\", amount: 5}\n      ],\n      destiny: \"cll 45# 73-15\"\n    }\n  ) {\n    codigo\n    mensaje\n  }\n}",
+						"variables": ""
 					}
 				},
 				"url": {
-					"raw": "http://127.0.0.1:5000/health",
+					"raw": "http://34.95.54.198:5010/v1",
 					"protocol": "http",
 					"host": [
-						"127",
-						"0",
-						"0",
-						"1"
+						"34",
+						"95",
+						"54",
+						"198"
 					],
-					"port": "5000",
+					"port": "5010",
 					"path": [
-						"health"
+						"v1"
 					]
 				}
 			},
 			"response": []
 		},
 		{
-			"name": "crear_orden_comando",
+			"name": "Consultar ordenes asincrono",
 			"request": {
 				"method": "POST",
 				"header": [],
 				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"orderId\": 1,\n    \"products\": [\n        {\n            \"productReference\": \"producto 1\",\n            \"amount\": 5\n        },\n        {\n            \"productReference\": \"producto 2\",\n            \"amount\": 2\n        }\n    ],\n    \"destiny\": \"cll 45# 73-15\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
+					"mode": "graphql",
+					"graphql": {
+						"query": "query MyQuery {\n  ordenesAsincrono {\n    codigo\n    mensaje\n  }\n}",
+						"variables": ""
 					}
 				},
 				"url": {
-					"raw": "http://127.0.0.1:5000/orden-comando",
+					"raw": "http://34.95.54.198:5010/v1",
 					"protocol": "http",
 					"host": [
-						"127",
-						"0",
-						"0",
-						"1"
+						"34",
+						"95",
+						"54",
+						"198"
 					],
-					"port": "5000",
+					"port": "5010",
 					"path": [
-						"orden-comando"
+						"v1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Consultar ordenes",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "query MyQuery {\n  ordenes {\n    destiny\n    orderId\n    products {\n      amount\n      productReference\n    }\n  }\n}",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "http://34.95.54.198:5010/v1",
+					"protocol": "http",
+					"host": [
+						"34",
+						"95",
+						"54",
+						"198"
+					],
+					"port": "5010",
+					"path": [
+						"v1"
 					]
 				}
 			},
